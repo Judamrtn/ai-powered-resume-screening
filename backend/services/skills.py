@@ -67,14 +67,30 @@ def find_matches(text: str, skill_list: list) -> list:
 
 
 def extract_contextual_skills(text: str, skill_list: list) -> list:
-    found      = set()
+    found       = set()
     skill_lower = {s.lower(): s for s in skill_list}
     for pattern, group in CONTEXT_PATTERNS:
         for match in re.finditer(pattern, text, re.IGNORECASE | re.MULTILINE):
             phrase = match.group(group).strip().lower()
             for skill_l, skill_orig in skill_lower.items():
-                if skill_l in phrase:
-                    found.add(skill_orig)
+                # Word-boundary check, not a raw substring check — a raw
+                # `skill_l in phrase` check would let a single-letter skill
+                # like "C" falsely match inside any word containing the
+                # letter c (e.g. "corporate"), which is exactly what
+                # happened before this fix. Very short skill tokens (<=2
+                # chars) are additionally required to match a WHOLE word
+                # in the phrase, not just appear with boundaries, since
+                # boundary regex alone is still too permissive for things
+                # like "C" or "R" sitting next to punctuation.
+                if len(skill_l) <= 2:
+                    phrase_words = re.findall(r"[\w\+\#]+", phrase)
+                    if skill_l not in phrase_words:
+                        continue
+                else:
+                    boundary_pattern = r'(?<![A-Za-z0-9])' + re.escape(skill_l) + r'(?![A-Za-z0-9])'
+                    if not re.search(boundary_pattern, phrase):
+                        continue
+                found.add(skill_orig)
     return list(found)
 
 

@@ -88,43 +88,71 @@ def extract_years_from_phrases(text: str) -> float:
 
 # ── Strategy 2: Date range extraction ────────────────────────────────────────
 
+EDUCATION_CONTEXT_PATTERNS = [
+    r'(?:university|college|institute|school|academy|polytechnic)',
+    r'(?:bachelor|master|phd|diploma|degree|bsc|msc|ba|ma|mba)',
+    r'(?:graduated|graduation|enrolled|studied|gpa|cgpa|cumulative)',
+]
+
+
+def is_education_date_range(text: str, start: int, end: int) -> bool:
+    """
+    Check if a date range appears near education keywords.
+    If so, it's likely an education date, not work experience.
+    """
+    # Get surrounding context (200 chars before and after)
+    context = text[max(0, start - 200):end + 200].lower()
+    for pattern in EDUCATION_CONTEXT_PATTERNS:
+        if re.search(pattern, context):
+            return True
+    return False
+
+
 def extract_years_from_date_ranges(text: str) -> float:
     """
     Find all date ranges in text and sum unique non-overlapping durations.
+    Skips date ranges that appear near education keywords.
     Examples matched:
       - "2020 - 2023"
       - "Jan 2019 - Mar 2022"
       - "2018 - Present"
       - "March 2020 to Current"
     """
-    # Pattern: date_token separator date_token
     sep      = r'\s*(?:–|—|-|to)\s*'
     date_tok = r'(?:(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+)?\d{4}|present|current|now'
+    pattern  = rf'({date_tok}){sep}({date_tok})'
 
-    pattern = rf'({date_tok}){sep}({date_tok})'
-    matches = re.findall(pattern, text.lower())
-
-    total_months = 0.0
     parsed_ranges = []
+    text_lower    = text.lower()
 
-    for start_str, end_str in matches:
-        start = parse_year_month(start_str.strip())
-        end   = parse_year_month(end_str.strip())
-        if start and end and end >= start:
-            duration = months_between(start, end)
-            if 1 <= duration <= 600:  # between 1 month and 50 years
-                parsed_ranges.append((start, end, duration))
+    for match in re.finditer(pattern, text_lower):
+        start_str = match.group(1).strip()
+        end_str   = match.group(2).strip()
+        start     = parse_year_month(start_str)
+        end       = parse_year_month(end_str)
+
+        if not start or not end or end < start:
+            continue
+
+        duration = months_between(start, end)
+        if not (1 <= duration <= 600):
+            continue
+
+        # Skip if this date range is near education keywords
+        if is_education_date_range(text_lower, match.start(), match.end()):
+            continue
+
+        parsed_ranges.append((start, end, duration))
 
     if not parsed_ranges:
         return 0.0
 
-    # Sort by start date and merge overlapping ranges
+    # Sort and merge overlapping ranges
     parsed_ranges.sort(key=lambda x: x[0])
     merged = [parsed_ranges[0]]
     for start, end, _ in parsed_ranges[1:]:
         last_start, last_end, _ = merged[-1]
         if start <= last_end:
-            # Overlapping — extend the last range
             new_end      = max(last_end, end)
             new_duration = months_between(last_start, new_end)
             merged[-1]   = (last_start, new_end, new_duration)

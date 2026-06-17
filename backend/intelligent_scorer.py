@@ -14,70 +14,14 @@ Implements 10 advanced scoring signals beyond simple keyword matching:
 10. Red flags detection
 """
 from __future__ import annotations
+from contextual_extractor import extract_contextual_skills
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
 
 CURRENT_YEAR = datetime.now().year
 
-# ── 1. Contextual Skill Patterns ──────────────────────────────────────────────
-# Maps action phrases to implied skills
-CONTEXTUAL_SKILL_MAP = {
-    # Leadership & Management
-    r'managed\s+(?:a\s+)?team\s+of\s+\d+':          ["Leadership", "Team Management"],
-    r'led\s+(?:a\s+)?team':                           ["Leadership", "Team Management"],
-    r'supervised\s+\d+\s+(?:staff|employees|people)': ["Leadership", "Supervision"],
-    r'mentored\s+(?:junior|team|staff)':              ["Mentoring", "Leadership"],
-    r'hired\s+and\s+trained':                         ["Recruitment", "Training"],
-
-    # Financial
-    r'managed\s+(?:a\s+)?budget\s+of':               ["Budget Management", "Financial Analysis"],
-    r'reduced\s+costs?\s+by\s+\d+':                  ["Cost Reduction", "Financial Analysis"],
-    r'increased\s+revenue\s+by\s+\d+':               ["Sales", "Revenue Growth"],
-    r'managed\s+p&l':                                 ["P&L Management", "Financial Analysis"],
-    r'forecasted?\s+(?:revenue|budget|sales)':        ["Financial Forecasting", "Budgeting"],
-
-    # Technical
-    r'built\s+(?:and\s+deployed\s+)?(?:rest\s+)?api': ["REST APIs", "API Design"],
-    r'designed\s+(?:the\s+)?(?:system|architecture)': ["System Design", "Architecture"],
-    r'deployed\s+(?:to\s+)?(?:aws|azure|gcp|cloud)':  ["Cloud", "DevOps"],
-    r'optimized\s+(?:database|query|sql)':             ["Database Optimization", "SQL"],
-    r'implemented\s+ci/cd':                            ["CI/CD", "DevOps"],
-    r'containerized?\s+(?:using\s+)?docker':           ["Docker", "DevOps"],
-
-    # HR
-    r'conducted\s+(?:performance\s+)?(?:reviews?|appraisals?)': ["Performance Management"],
-    r'developed\s+(?:hr\s+)?(?:policies|procedures)':            ["HR Policies"],
-    r'managed\s+(?:the\s+)?(?:recruitment|hiring)\s+process':    ["Recruitment", "Talent Acquisition"],
-    r'onboarded?\s+\d+\s+(?:new\s+)?(?:employees|staff|hires)':  ["Onboarding"],
-    r'resolved\s+employee\s+(?:disputes?|conflicts?|grievances?)': ["Employee Relations", "Conflict Resolution"],
-
-    # Marketing
-    r'grew\s+(?:social\s+media\s+)?(?:followers?|audience)\s+by\s+\d+': ["Social Media Marketing"],
-    r'increased\s+(?:website\s+)?traffic\s+by\s+\d+':                    ["SEO", "Digital Marketing"],
-    r'managed\s+(?:google\s+)?(?:ads?|adwords|ppc)\s+(?:campaigns?)?':   ["Google Ads", "PPC"],
-    r'generated\s+\d+\s+(?:leads?|conversions?)':                         ["Lead Generation"],
-
-    # Healthcare
-    r'cared?\s+for\s+\d+\s+patients?':               ["Patient Care", "Clinical Skills"],
-    r'administered\s+(?:medications?|iv|injections?)': ["Medication Administration", "Clinical Skills"],
-    r'conducted\s+clinical\s+(?:assessments?|trials?)': ["Clinical Assessment", "Clinical Research"],
-
-    # General
-    r'presented\s+to\s+(?:senior\s+)?(?:management|executives|stakeholders)': ["Presentation Skills", "Stakeholder Management"],
-    r'collaborated\s+with\s+(?:cross[- ]functional|multiple)\s+teams?':        ["Collaboration", "Cross-functional"],
-    r'delivered\s+(?:project|solution)\s+(?:on\s+time|ahead\s+of\s+schedule)': ["Project Management", "Time Management"],
-}
-
-
-def extract_contextual_skills(text: str) -> list[str]:
-    """Extract skills implied by action phrases in resume text."""
-    found = set()
-    text_lower = text.lower()
-    for pattern, skills in CONTEXTUAL_SKILL_MAP.items():
-        if re.search(pattern, text_lower):
-            found.update(skills)
-    return list(found)
+# Contextual skill extraction moved to contextual_extractor.py
 
 
 # ── 2. Career Progression Scoring ────────────────────────────────────────────
@@ -577,6 +521,8 @@ class IntelligentScoringResult:
     final_score:            float = 0.0
     red_flags:              list  = field(default_factory=list)
     red_flag_penalty:       float = 0.0
+    is_overqualified:       bool  = False
+    overqualification_ratio: float | None = None
 
     # Details
     matched_skills:         list[str] = field(default_factory=list)
@@ -617,6 +563,7 @@ def compute_intelligent_score(
         skills_match_with_synonyms, score_experience_domain_aware,
         extract_education_level, score_education,
         score_certifications, extract_relevant_sections,
+        detect_overqualification,
     )
     from experience_extractor import extract_years_of_experience
 
@@ -636,9 +583,19 @@ def compute_intelligent_score(
         # One is general — lighter penalty
         sem_score = round(semantic_score * 0.80, 2)
     else:
-        # Same domain — slight adjustment based on skills
-        # If no skills match, semantic score shouldn't be too high
+        # Same domain
         sem_score = round(semantic_score, 2)
+
+    # Experience-based semantic penalty
+    # Fresh graduates with theoretical knowledge shouldn't score
+    # same as experienced professionals semantically
+    exp_years_check = extract_years_of_experience(resume_text)
+    if exp_years_check == 0:
+        # No experience — cap semantic at 60%
+        sem_score = round(min(sem_score, 60.0), 2)
+    elif exp_years_check < 1:
+        # Less than 1 year — cap at 70%
+        sem_score = round(min(sem_score, 70.0), 2)
 
     # Advanced skills matching with partial credit
     adv_match      = advanced_skills_match(resume_skills, job_required_skills)
@@ -671,6 +628,8 @@ def compute_intelligent_score(
         # Has relevant skills — experience counts normally
         exp_score = raw_exp_score
 
+    overqual_info = detect_overqualification(exp_years, job_min_experience)
+
     # Education
     edu_name, _ = extract_education_level(resume_text)
     edu_score   = score_education(resume_text, job_education_level)
@@ -689,8 +648,24 @@ def compute_intelligent_score(
     skills_result2 = skills_match_with_synonyms(all_skills, job_required_skills)
     ctx_skills_sc  = round(skills_result2["match_ratio"] * 100, 2)
 
-    # 2. Career progression
+    # Contextual skills boost is limited when experience is very low
+    if exp_years is not None and exp_years < 2:
+        ctx_boost = ctx_skills_sc - base_skills_sc
+        if ctx_boost > 15:
+            ctx_skills_sc = base_skills_sc + 15  # cap contextual boost at 15%
+    elif exp_years is not None and exp_years < 3:
+        ctx_boost = ctx_skills_sc - base_skills_sc
+        if ctx_boost > 25:
+            ctx_skills_sc = base_skills_sc + 25  # cap contextual boost at 25%
+
+    # 2. Career progression — penalize if no real work experience found
     career_score = score_career_progression(resume_text)
+    if exp_years == 0:
+        # Fresh graduate — career progression irrelevant
+        career_score = min(career_score, 20.0)
+    elif exp_years < 1:
+        # Less than 1 year — heavily discounted
+        career_score = min(career_score, 35.0)
 
     # 3. Skill recency
     recency_score = score_skills_with_recency(
@@ -718,6 +693,16 @@ def compute_intelligent_score(
 
     # ── Context-enhanced skills score ─────────────────────────────────────────
     final_skills = max(base_skills_sc, ctx_skills_sc)
+
+    # Academic skills discount — if no work experience, skills likely theoretical
+    # A fresh graduate with all required skills on paper still lacks practical experience
+    if exp_years == 0 and final_skills > 50:
+        # Cap skills at 55% for candidates with zero work experience
+        final_skills = min(final_skills, 55.0)
+    elif exp_years is not None and exp_years < 1 and final_skills > 60:
+        final_skills = min(final_skills, 60.0)
+    elif exp_years is not None and exp_years < 2 and final_skills > 70:
+        final_skills = min(final_skills, 70.0)
 
     # ── Domain gate — penalize domain-dependent scores when skills = 0 ────────
     # Skills gate factor: 0.0 when no skills, 1.0 when full skills match
@@ -773,6 +758,8 @@ def compute_intelligent_score(
         final_score            = final,
         red_flags              = red_flag_result["flags"],
         red_flag_penalty       = penalty,
+        is_overqualified        = overqual_info["is_overqualified"],
+        overqualification_ratio = overqual_info["ratio"],
         matched_skills         = (
                                    adv_match["matched"] +
                                    [f"{s}" for s in adv_match.get("adjacent", [])] +

@@ -12,7 +12,7 @@ from schemas.candidate import (
 )
 from security import require_recruiter
 from models.user import User
-from resume_parser import parse_pdf
+from resume_parser import parse_resume
 from extractor import extract_email, extract_phone, extract_name
 from services.skills import extract_skills
 from services.embedding import get_embedding
@@ -62,8 +62,12 @@ async def upload_resume(
     """Upload resume and score using intelligent 10-signal scoring engine."""
     job = get_job_or_404(job_id, db)
 
-    if not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=422, detail="Only PDF files are accepted.")
+    allowed_extensions = (".pdf", ".docx")
+    if not file.filename.lower().endswith(allowed_extensions):
+        raise HTTPException(
+            status_code=422,
+            detail="Only PDF and DOCX files are accepted.",
+        )
 
     content = await file.read()
     if len(content) > MAX_FILE_SIZE:
@@ -76,17 +80,22 @@ async def upload_resume(
     ).first():
         raise HTTPException(status_code=409, detail="Duplicate resume for this job.")
 
-    unique_name = f"{uuid.uuid4()}.pdf"
+    file_ext    = ".docx" if file.filename.lower().endswith(".docx") else ".pdf"
+    unique_name = f"{uuid.uuid4()}{file_ext}"
     file_path   = os.path.join(UPLOAD_FOLDER, unique_name)
 
     try:
         with open(file_path, "wb") as f:
             f.write(content)
 
-        extracted_text = parse_pdf(file_path)
+        try:
+            extracted_text = parse_resume(file_path, file.filename)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e))
+
         if not extracted_text or not extracted_text.strip():
             raise HTTPException(status_code=422,
-                detail="Could not extract text — PDF may be scanned or image-only.")
+                detail="Could not extract text — file may be scanned, image-only, or corrupted.")
 
         # Validate document is actually a resume
         is_valid, error_msg = validate_resume(extracted_text)

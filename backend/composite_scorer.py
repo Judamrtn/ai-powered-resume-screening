@@ -162,13 +162,30 @@ def score_education(resume_text: str, required_education: str | None) -> float:
     if not required_education:
         return 50.0
 
-    # Get required rank
-    req_lower = required_education.lower()
+    # Get required rank — also check common shorthand like "Bachelor's", "Master's"
+    req_lower = required_education.lower().strip()
     req_rank  = 0
+
+    # Quick shorthand mapping first
+    SHORTHAND = {
+        "bachelor": 4, "bachelor's": 4, "bachelors": 4,
+        "master": 5, "master's": 5, "masters": 5,
+        "phd": 6, "doctorate": 6,
+        "diploma": 2, "advanced diploma": 3,
+        "associate": 3, "certificate": 2,
+        "high school": 1, "secondary": 1,
+    }
+    for key, rank in SHORTHAND.items():
+        if key in req_lower:
+            req_rank = max(req_rank, rank)
+
+    # Also try full patterns
     for pattern, rank in EDUCATION_PATTERNS:
-        if re.search(pattern, req_lower):
-            if rank > req_rank:
-                req_rank = rank
+        try:
+            if re.search(pattern, req_lower):
+                req_rank = max(req_rank, rank)
+        except re.error:
+            pass
 
     if req_rank == 0:
         return 50.0  # unrecognized requirement
@@ -225,9 +242,40 @@ def score_experience_domain_aware(
     if years_found == 0:
         return 20.0
     if years_found >= required_years:
-        bonus = min((years_found - required_years) * 5, 20)
-        return min(100.0, 80.0 + bonus)
+        excess = years_found - required_years
+        bonus  = min(excess * 5, 20)
+        score  = min(100.0, 80.0 + bonus)
+
+        # Overqualification soft penalty — very large excess experience
+        # relative to what the role asks for is a real recruiter concern
+        # (flight risk, salary mismatch, role under-utilization), so we
+        # taper the score back down rather than letting it climb forever.
+        if required_years > 0:
+            ratio = years_found / required_years
+            if ratio >= 4:
+                # e.g. 8+ years for a job requiring 2 — heavily overqualified
+                score = max(score - 15, 60.0)
+            elif ratio >= 2.5:
+                # moderately overqualified
+                score = max(score - 7, 70.0)
+
+        return round(score, 2)
     return round((years_found / required_years) * 75, 2)
+
+
+def detect_overqualification(years_found: float, required_years: int | None) -> dict:
+    """
+    Flag overqualification as a separate signal recruiters can see,
+    independent of the numeric experience score adjustment above.
+    """
+    if not required_years or required_years == 0 or years_found == 0:
+        return {"is_overqualified": False, "ratio": None}
+
+    ratio = round(years_found / required_years, 2)
+    return {
+        "is_overqualified": ratio >= 2.5,
+        "ratio": ratio,
+    }
 
 
 # ── Fix 3: Section-aware semantic scoring ────────────────────────────────────
