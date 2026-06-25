@@ -1,4 +1,4 @@
-"""
+﻿"""
 Skills Gap Analysis Router
 Provides endpoints for analyzing skill gaps between candidates and job requirements.
 """
@@ -11,14 +11,14 @@ from typing import Optional
 from database import get_db
 from models.candidate import Candidate
 from models.jobs import Job
-from security import require_recruiter
+from security import require_recruiter, get_current_user
 from models.user import User
-from taxonomy import normalize_skill, skills_match_with_synonyms
+from composite_scorer import skills_match_with_synonyms
 
 router = APIRouter(prefix="/jobs/{job_id}/gap-analysis", tags=["Skills Gap Analysis"])
 
 
-# ── Response schemas ──────────────────────────────────────────────────────────
+# â”€â”€ Response schemas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class CandidateGapSummary(BaseModel):
     candidate_id:    UUID
@@ -68,7 +68,7 @@ class SingleCandidateGap(BaseModel):
     recommendation:  str   # "Strong Match" | "Good Match" | "Partial Match" | "Weak Match"
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def get_recommendation(score: float) -> str:
     if score >= 80:
@@ -81,18 +81,20 @@ def get_recommendation(score: float) -> str:
         return "Weak Match"
 
 
-# ── SINGLE CANDIDATE GAP ──────────────────────────────────────────────────────
+# â”€â”€ SINGLE CANDIDATE GAP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/candidates/{candidate_id}", response_model=SingleCandidateGap)
 def candidate_gap_analysis(
     job_id:       UUID,
     candidate_id: UUID,
     db:           Session = Depends(get_db),
-    _:            User    = Depends(require_recruiter),
+    current_user: User    = Depends(get_current_user),
 ):
     """Detailed skill gap analysis for a single candidate against a job."""
     job = db.get(Job, job_id)
     if not job:
+        raise HTTPException(status_code=404, detail="Job not found.")
+    if current_user.role != "admin" and str(job.created_by) != str(current_user.id):
         raise HTTPException(status_code=404, detail="Job not found.")
 
     candidate = db.get(Candidate, candidate_id)
@@ -123,13 +125,13 @@ def candidate_gap_analysis(
     )
 
 
-# ── JOB-WIDE GAP ANALYSIS ─────────────────────────────────────────────────────
+# â”€â”€ JOB-WIDE GAP ANALYSIS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @router.get("/", response_model=JobGapAnalysis)
 def job_gap_analysis(
     job_id: UUID,
     db:     Session = Depends(get_db),
-    _:      User    = Depends(require_recruiter),
+    current_user: User    = Depends(get_current_user),
 ):
     """
     Aggregate skill gap analysis across all candidates for a job.
@@ -137,6 +139,8 @@ def job_gap_analysis(
     """
     job = db.get(Job, job_id)
     if not job:
+        raise HTTPException(status_code=404, detail="Job not found.")
+    if current_user.role != "admin" and str(job.created_by) != str(current_user.id):
         raise HTTPException(status_code=404, detail="Job not found.")
 
     candidates = db.query(Candidate).filter(Candidate.job_id == job_id).all()

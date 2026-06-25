@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+﻿from fastapi import FastAPI, UploadFile, File
 from dotenv import load_dotenv
 import os
 import uuid
@@ -7,15 +7,26 @@ load_dotenv()
 
 app = FastAPI(title="AI Resume Screening System", version="1.0.0")
 
+
 from routers.auth import router as auth_router
 from routers.jobs import router as jobs_router
 from routers.candidate import router as candidates_router
 from routers.interview import router as interview_router
+from routers.dashboard import router as dashboard_router
+from routers.reports import router as reports_router
+from routers.notifications import router as notifications_router
+from routers.gap_analysis import router as gap_analysis_router
+from routers.public import router as public_router
 
 app.include_router(interview_router)
 app.include_router(auth_router)
 app.include_router(jobs_router)
 app.include_router(candidates_router)
+app.include_router(dashboard_router)
+app.include_router(reports_router)
+app.include_router(notifications_router)
+app.include_router(gap_analysis_router)
+app.include_router(public_router)
 
 
 # ---------------- HOME ----------------
@@ -27,7 +38,7 @@ def home():
 # ---------------- DEBUG: Extract raw text from PDF ----------------
 @app.post("/debug/text")
 async def debug_text(file: UploadFile = File(...)):
-    """Debug endpoint — shows raw extracted text from a PDF."""
+    """Debug endpoint - shows raw extracted text from a PDF."""
     content  = await file.read()
     filename = f"uploads/{uuid.uuid4()}.pdf"
     os.makedirs("uploads", exist_ok=True)
@@ -45,7 +56,7 @@ async def debug_text(file: UploadFile = File(...)):
 # ---------------- DEBUG: Education detection ----------------
 @app.post("/debug/education")
 async def debug_education(file: UploadFile = File(...)):
-    """Debug endpoint — shows education detection results."""
+    """Debug endpoint - shows education detection results."""
     content  = await file.read()
     filename = f"uploads/{uuid.uuid4()}.pdf"
     os.makedirs("uploads", exist_ok=True)
@@ -71,7 +82,7 @@ async def debug_education(file: UploadFile = File(...)):
 # ---------------- DEBUG: Scoring breakdown ----------------
 @app.post("/debug/score")
 async def debug_score(file: UploadFile = File(...), job_id: str = None):
-    """Debug endpoint — shows full scoring breakdown."""
+    """Debug endpoint - shows full scoring breakdown."""
     content  = await file.read()
     filename = f"uploads/{uuid.uuid4()}.pdf"
     os.makedirs("uploads", exist_ok=True)

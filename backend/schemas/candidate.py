@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
@@ -11,6 +11,7 @@ class CandidateResponse(BaseModel):
     name:   Optional[str]
     email:  Optional[str]
     phone:  Optional[str]
+    source: str
     skills: list[str]
 
     # Core scores

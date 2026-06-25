@@ -61,9 +61,81 @@ def find_matches(text: str, skill_list: list) -> list:
     found = []
     for skill in skill_list:
         pattern = r'(?<![A-Za-z0-9])' + re.escape(skill) + r'(?![A-Za-z0-9])'
-        if re.search(pattern, text, re.IGNORECASE):
-            found.append(skill)
+        for m in re.finditer(pattern, text, re.IGNORECASE):
+            if not is_negated_mention(text, m.start()):
+                found.append(skill)
+                break  # one credited mention is enough to count the skill
     return found
+
+
+# Phrases that, when found shortly before a skill mention, mean the
+# candidate is explicitly disclaiming or has not yet acquired that
+# skill — crediting it as a real skill would be a false positive that
+# directly inflates skills_score for candidates who are simply being
+# honest about their gaps.
+NEGATION_PATTERNS = [
+    r'\bno\s+experience\s+(?:with|in|using)\b',
+    r'\bnot\s+(?:yet\s+)?(?:familiar|experienced|proficient|skilled)\s+(?:with|in)\b',
+    r'\bwithout\s+(?:any\s+)?experience\s+(?:in|with)\b',
+    r'\black(?:s|ing)?\s+(?:of\s+)?experience\s+(?:in|with)\b',
+    r'\blimited\s+(?:exposure|experience|knowledge)\s+(?:to|in|with)\b',
+    r'\bno\s+(?:prior\s+)?knowledge\s+of\b',
+    r'\bcurrently\s+learning\b',
+    r'\b(?:would\s+like|hope|hoping|eager|keen)\s+to\s+(?:learn|gain\s+experience\s+(?:in|with))\b',
+    r'\bplanning\s+to\s+learn\b',
+    r'\bnew\s+to\b',
+    r'\bbeginner\s+(?:in|with|at)\b',
+    r'\bunfamiliar\s+with\b',
+]
+_NEGATION_REGEX = re.compile("|".join(NEGATION_PATTERNS), re.IGNORECASE)
+
+# How far back (characters) to look for a negation cue before the skill
+# mention. Wide enough to catch "I have no experience with Python and
+# Docker" (the cue is well before "Docker"), narrow enough to avoid
+# bleeding into a previous, unrelated sentence.
+NEGATION_LOOKBACK_CHARS = 60
+
+
+def is_negated_mention(text: str, match_start: int) -> bool:
+    """
+    Check whether the skill mention at match_start is inside a negated
+    or aspirational ("not yet acquired") context, by scanning backward
+    within the same sentence/clause for a negation cue phrase.
+    """
+    window_start = max(0, match_start - NEGATION_LOOKBACK_CHARS)
+    window       = text[window_start:match_start]
+
+    # IMPORTANT: PDF-extracted text frequently contains single newlines
+    # that are just visual line-wraps from the page layout, not real
+    # sentence breaks (e.g. "...currently learning\nKubernetes..." is
+    # ONE sentence split across two lines). Treating every "\n" as a
+    # hard boundary would wrongly cut off a negation cue that continues
+    # onto the next visual line. A DOUBLE newline ("\n\n", a blank line)
+    # is a much more reliable signal of an actual paragraph/section
+    # break, so only that — plus real sentence-ending punctuation — is
+    # treated as a hard boundary. A lone "\n" is normalized to a space
+    # before boundary detection so it never falsely resets scope.
+    window = re.sub(r'(?<!\n)\n(?!\n)', ' ', window)
+
+    hard_boundaries     = [".", "\n\n", ";"]
+    contrast_boundaries = [
+        m.end() for m in re.finditer(
+            r',\s*(?:but|though|however|yet|although|except)\b',
+            window, re.IGNORECASE,
+        )
+    ]
+
+    last_cut = 0
+    for boundary in hard_boundaries:
+        idx = window.rfind(boundary)
+        if idx != -1:
+            last_cut = max(last_cut, idx + len(boundary))
+    if contrast_boundaries:
+        last_cut = max(last_cut, max(contrast_boundaries))
+
+    window = window[last_cut:]
+
+    return bool(_NEGATION_REGEX.search(window))
 
 
 def extract_contextual_skills(text: str, skill_list: list) -> list:
@@ -71,6 +143,14 @@ def extract_contextual_skills(text: str, skill_list: list) -> list:
     skill_lower = {s.lower(): s for s in skill_list}
     for pattern, group in CONTEXT_PATTERNS:
         for match in re.finditer(pattern, text, re.IGNORECASE | re.MULTILINE):
+            # Check negation relative to where the whole pattern starts,
+            # not just the captured group — "no experience with" has its
+            # negation cue ("no") sitting BEFORE the trigger word
+            # ("experience"), which is itself before the captured skill
+            # name, so the lookback must start from match.start().
+            if is_negated_mention(text, match.start()):
+                continue
+
             phrase = match.group(group).strip().lower()
             for skill_l, skill_orig in skill_lower.items():
                 # Word-boundary check, not a raw substring check — a raw
@@ -100,12 +180,34 @@ def extract_skills_with_ner(text: str) -> list:
     if not model_path.exists():
         return []
     try:
-        import spacy
+        import importlib
+        if importlib.util.find_spec("spacy") is None:
+            return []
+        spacy = importlib.import_module("spacy")
         nlp  = spacy.load(model_path)
         doc  = nlp(text[:3000])
         return [ent.text for ent in doc.ents if ent.label_ == "SKILL"]
     except Exception:
         return []
+
+
+def has_any_non_negated_mention(text: str, skill: str) -> bool:
+    """
+    Check whether a skill has at least one mention in the text that is
+    NOT inside a negated/aspirational context. Used as a final filter
+    after combining results from all four extraction strategies, since
+    strategies like the NER model have no awareness of negation and can
+    otherwise reintroduce a skill that other strategies correctly
+    excluded as disclaimed (e.g. "no experience with Python").
+    """
+    pattern = r'(?<![A-Za-z0-9])' + re.escape(skill) + r'(?![A-Za-z0-9])'
+    matches = list(re.finditer(pattern, text, re.IGNORECASE))
+    if not matches:
+        # Skill wasn't found verbatim in the raw text at all (e.g. it
+        # came from a synonym/contextual inference rather than a literal
+        # mention) — don't penalize it, nothing to check negation against.
+        return True
+    return any(not is_negated_mention(text, m.start()) for m in matches)
 
 
 def extract_skills(text: str) -> dict:
@@ -126,9 +228,18 @@ def extract_skills(text: str) -> dict:
     contextual  = extract_contextual_skills(text, ALL_SKILLS)
     all_matched = list(set(all_matched + contextual))
 
-    # Strategy 4: NER model
+    # Strategy 4: NER model — this strategy has NO negation awareness,
+    # so anything it adds must still pass the final negation filter below
     ner_skills  = extract_skills_with_ner(text)
     all_matched = list(set(all_matched + ner_skills))
+
+    # Final negation pass over the COMBINED list — catches anything any
+    # individual strategy missed, particularly the NER model which can't
+    # see negation context at all.
+    all_matched = [
+        skill for skill in all_matched
+        if has_any_non_negated_mention(text, skill)
+    ]
 
     # Normalize using taxonomy (JS→JavaScript, k8s→Kubernetes, etc.)
     normalized = normalize_skills(all_matched)

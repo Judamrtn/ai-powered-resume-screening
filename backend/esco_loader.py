@@ -11,8 +11,15 @@ Covers: IT, Healthcare, Finance, Law, Engineering, Marketing,
 import os
 import json
 import csv
-import requests
-import pandas as pd
+try:
+    import requests  # optional
+except ModuleNotFoundError:  # pragma: no cover
+    requests = None
+# pandas is optional; the loader can run without it
+try:
+    import pandas as pd  # noqa: F401
+except ModuleNotFoundError:  # pragma: no cover
+    pd = None
 from pathlib import Path
 
 SKILLS_CACHE_PATH = Path("data/esco_skills.json")

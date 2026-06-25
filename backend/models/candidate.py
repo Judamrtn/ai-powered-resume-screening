@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Float, DateTime, Text, ARRAY, ForeignKey, JSON
+﻿from sqlalchemy import Column, String, Float, DateTime, Text, ARRAY, ForeignKey, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy import func
@@ -19,6 +19,13 @@ class Candidate(Base):
     email    = Column(String(255), nullable=True, index=True)
     phone    = Column(String(50),  nullable=True)
 
+    # Application source - where this candidate's application came from.
+    # Populated by the client at upload time (defaults to 'direct' if not
+    # specified). Used for source-effectiveness reporting: which channels
+    # (referral, linkedin, job board, direct, etc.) yield the highest-
+    # scoring or most-hired candidates.
+    source = Column(String(50), nullable=False, default='direct')
+
     # Resume file
     original_filename = Column(String(255), nullable=False)
     stored_filename   = Column(String(255), nullable=False)
@@ -28,7 +35,7 @@ class Candidate(Base):
     skills   = Column(ARRAY(String), nullable=False, default=list)
     raw_text = Column(Text, nullable=True)
 
-    # ── Core scores (0-100) ────────────────────────────────────────────────
+    # â”€â”€ Core scores (0-100) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     semantic_score      = Column(Float, nullable=True)
     skills_score        = Column(Float, nullable=True)
     experience_score    = Column(Float, nullable=True)
@@ -36,7 +43,7 @@ class Candidate(Base):
     certification_score = Column(Float, nullable=True)
     score               = Column(Float, nullable=True, index=True)
 
-    # ── Advanced scores (0-100) ────────────────────────────────────────────
+    # â”€â”€ Advanced scores (0-100) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     career_progression  = Column(Float, nullable=True)
     skill_recency       = Column(Float, nullable=True)
     resume_quality      = Column(Float, nullable=True)
@@ -44,7 +51,7 @@ class Candidate(Base):
     industry_match      = Column(Float, nullable=True)
     education_field     = Column(Float, nullable=True)
 
-    # ── Skill gap details ──────────────────────────────────────────────────
+    # â”€â”€ Skill gap details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     matched_skills   = Column(ARRAY(String), nullable=False, default=list)
     missing_skills   = Column(ARRAY(String), nullable=False, default=list)
     matched_certs    = Column(ARRAY(String), nullable=False, default=list)
@@ -52,17 +59,17 @@ class Candidate(Base):
     contextual_skills = Column(ARRAY(String), nullable=False, default=list)
     inferred_skills  = Column(ARRAY(String), nullable=False, default=list)
 
-    # ── Detected info ──────────────────────────────────────────────────────
+    # â”€â”€ Detected info â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     experience_years_found = Column(Float,       nullable=True)
     education_level_found  = Column(String(100), nullable=True)
     resume_domain          = Column(String(50),  nullable=True)
     job_domain             = Column(String(50),  nullable=True)
 
-    # ── Red flags ──────────────────────────────────────────────────────────
+    # â”€â”€ Red flags â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     red_flags         = Column(ARRAY(String), nullable=False, default=list)
     red_flag_penalty  = Column(Float, nullable=True)
 
-    # ── Recommendation ─────────────────────────────────────────────────────
+    # â”€â”€ Recommendation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     recommendation = Column(String(50), nullable=True)
 
     # Pipeline

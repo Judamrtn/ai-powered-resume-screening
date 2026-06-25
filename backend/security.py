@@ -25,11 +25,26 @@ oauth2_scheme = HTTPBearer()
 # ── Password helpers ──────────────────────────────────────────────────────────
 
 def hash_password(password: str) -> str:
+    # bcrypt has a 72-byte limit for the password string.
+    # Trim by bytes (not characters) to avoid ValueError on long inputs.
+    password_bytes = password.encode("utf-8")
+    if len(password_bytes) > 72:
+        password = password_bytes[:72].decode("utf-8", errors="ignore")
     return pwd_context.hash(password)
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    # Mirror the same 72-byte trimming used during hashing.
+    plain_bytes = plain.encode("utf-8")
+    if len(plain_bytes) > 72:
+        plain = plain_bytes[:72].decode("utf-8", errors="ignore")
+    try:
+        return pwd_context.verify(plain, hashed)
+    except Exception:
+        # If hashing backend mismatch causes verify to error, fall back to False.
+        return False
+
+
 
 
 # ── Token helpers ─────────────────────────────────────────────────────────────
