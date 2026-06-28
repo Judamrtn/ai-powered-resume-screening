@@ -265,9 +265,4 @@ def skills_match_with_synonyms(resume_skills: list[str], job_skills: list[str], 
         "matched_count":  len(matched),
         "total_required": len(job_skills),
     }
-        "matched":       matched,
-        "missing":       missing,
-        "match_ratio":   ratio,
-        "matched_count": len(matched),
-        "total_required": len(job_skills),
-    }
+   
