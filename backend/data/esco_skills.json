@@ -2558,5 +2558,427 @@
     "canonical": "Intercultural Competence",
     "category": "Soft Skills",
     "aliases": []
+  },
+  "perl": {
+    "canonical": "Perl",
+    "category": "Information Technology",
+    "aliases": []
+  },
+  "powershell": {
+    "canonical": "PowerShell",
+    "category": "Information Technology",
+    "aliases": []
+  },
+  "tcp/ip networking": {
+    "canonical": "TCP/IP Networking",
+    "category": "Networking",
+    "aliases": [
+      "tcp/ip",
+      "tcp ip"
+    ]
+  },
+  "routing and switching": {
+    "canonical": "Routing and Switching",
+    "category": "Networking",
+    "aliases": [
+      "routing & switching"
+    ]
+  },
+  "network troubleshooting": {
+    "canonical": "Network Troubleshooting",
+    "category": "Networking",
+    "aliases": [
+      "network diagnostics"
+    ]
+  },
+  "cisco configuration": {
+    "canonical": "Cisco Configuration",
+    "category": "Networking",
+    "aliases": [
+      "cisco ios configuration",
+      "cisco ios"
+    ]
+  },
+  "cisco ios": {
+    "canonical": "Cisco IOS",
+    "category": "Networking",
+    "aliases": [
+      "ios configuration"
+    ]
+  },
+  "lan/wan": {
+    "canonical": "LAN/WAN",
+    "category": "Networking",
+    "aliases": [
+      "lan wan administration",
+      "lan/wan administration"
+    ]
+  },
+  "vlan configuration": {
+    "canonical": "VLAN Configuration",
+    "category": "Networking",
+    "aliases": [
+      "vlans",
+      "vlan"
+    ]
+  },
+  "vpn": {
+    "canonical": "VPN",
+    "category": "Networking",
+    "aliases": [
+      "vpn technologies",
+      "vpn connectivity"
+    ]
+  },
+  "firewall management": {
+    "canonical": "Firewall Management",
+    "category": "Networking",
+    "aliases": [
+      "firewall administration",
+      "firewall configuration"
+    ]
+  },
+  "network monitoring": {
+    "canonical": "Network Monitoring",
+    "category": "Networking",
+    "aliases": [
+      "network monitoring solutions"
+    ]
+  },
+  "wireless networking": {
+    "canonical": "Wireless Networking",
+    "category": "Networking",
+    "aliases": [
+      "wifi",
+      "wireless access points",
+      "wlan"
+    ]
+  },
+  "dns": {
+    "canonical": "DNS",
+    "category": "Networking",
+    "aliases": [
+      "domain name system"
+    ]
+  },
+  "dhcp": {
+    "canonical": "DHCP",
+    "category": "Networking",
+    "aliases": []
+  },
+  "bgp": {
+    "canonical": "BGP",
+    "category": "Networking",
+    "aliases": [
+      "border gateway protocol"
+    ]
+  },
+  "ospf": {
+    "canonical": "OSPF",
+    "category": "Networking",
+    "aliases": []
+  },
+  "mpls": {
+    "canonical": "MPLS",
+    "category": "Networking",
+    "aliases": []
+  },
+  "sdn": {
+    "canonical": "SDN",
+    "category": "Networking",
+    "aliases": [
+      "software defined networking"
+    ]
+  },
+  "network infrastructure": {
+    "canonical": "Network Infrastructure",
+    "category": "Networking",
+    "aliases": [
+      "network infrastructure design"
+    ]
+  },
+  "load balancing": {
+    "canonical": "Load Balancing",
+    "category": "Networking",
+    "aliases": []
+  },
+  "proxy servers": {
+    "canonical": "Proxy Servers",
+    "category": "Networking",
+    "aliases": []
+  },
+  "ipv6": {
+    "canonical": "IPv6",
+    "category": "Networking",
+    "aliases": []
+  },
+  "network automation": {
+    "canonical": "Network Automation",
+    "category": "Networking",
+    "aliases": []
+  },
+  "cloud networking": {
+    "canonical": "Cloud Networking",
+    "category": "Networking",
+    "aliases": []
+  },
+  "vmware virtualization": {
+    "canonical": "VMware Virtualization",
+    "category": "Networking",
+    "aliases": [
+      "vmware",
+      "virtualization"
+    ]
+  },
+  "python automation": {
+    "canonical": "Python Automation",
+    "category": "Networking",
+    "aliases": [
+      "network automation python"
+    ]
+  },
+  "linux administration": {
+    "canonical": "Linux Administration",
+    "category": "Networking",
+    "aliases": [
+      "linux admin"
+    ]
+  },
+  "ccna": {
+    "canonical": "CCNA",
+    "category": "Networking",
+    "aliases": [
+      "cisco certified network associate"
+    ]
+  },
+  "ccnp": {
+    "canonical": "CCNP",
+    "category": "Networking",
+    "aliases": [
+      "ccnp enterprise"
+    ]
+  },
+  "ccie": {
+    "canonical": "CCIE",
+    "category": "Networking",
+    "aliases": []
+  },
+  "comptia network+": {
+    "canonical": "CompTIA Network+",
+    "category": "Networking",
+    "aliases": [
+      "network+"
+    ]
+  },
+  "comptia security+": {
+    "canonical": "CompTIA Security+",
+    "category": "Cybersecurity",
+    "aliases": [
+      "security+"
+    ]
+  },
+  "sql": {
+    "canonical": "SQL",
+    "category": "Information Technology",
+    "aliases": []
+  },
+  "nosql": {
+    "canonical": "NoSQL",
+    "category": "Information Technology",
+    "aliases": []
+  },
+  "microsoft sql server": {
+    "canonical": "Microsoft SQL Server",
+    "category": "Information Technology",
+    "aliases": [
+      "sql server",
+      "mssql"
+    ]
+  },
+  "database optimization": {
+    "canonical": "Database Optimization",
+    "category": "Information Technology",
+    "aliases": [
+      "query optimization"
+    ]
+  },
+  "database administration": {
+    "canonical": "Database Administration",
+    "category": "Information Technology",
+    "aliases": [
+      "dba"
+    ]
+  },
+  "ansible": {
+    "canonical": "Ansible",
+    "category": "Information Technology",
+    "aliases": []
+  },
+  "jenkins": {
+    "canonical": "Jenkins",
+    "category": "Information Technology",
+    "aliases": []
+  },
+  "natural language processing": {
+    "canonical": "Natural Language Processing",
+    "category": "Information Technology",
+    "aliases": [
+      "nlp"
+    ]
+  },
+  "budget management": {
+    "canonical": "Budget Management",
+    "category": "Finance",
+    "aliases": []
+  },
+  "sage": {
+    "canonical": "Sage",
+    "category": "Finance",
+    "aliases": [
+      "sage accounting"
+    ]
+  },
+  "xero": {
+    "canonical": "Xero",
+    "category": "Finance",
+    "aliases": []
+  },
+  "successfactors": {
+    "canonical": "SuccessFactors",
+    "category": "Human Resources",
+    "aliases": [
+      "sap successfactors"
+    ]
+  },
+  "talent management": {
+    "canonical": "Talent Management",
+    "category": "Human Resources",
+    "aliases": []
+  },
+  "diagnosis": {
+    "canonical": "Diagnosis",
+    "category": "Healthcare",
+    "aliases": [
+      "clinical diagnosis",
+      "differential diagnosis"
+    ]
+  },
+  "infection control": {
+    "canonical": "Infection Control",
+    "category": "Healthcare",
+    "aliases": [
+      "infection prevention"
+    ]
+  },
+  "mechanical design": {
+    "canonical": "Mechanical Design",
+    "category": "Engineering",
+    "aliases": [
+      "mechanical engineering design"
+    ]
+  },
+  "manufacturing": {
+    "canonical": "Manufacturing",
+    "category": "Engineering",
+    "aliases": [
+      "production",
+      "manufacturing processes"
+    ]
+  },
+  "autocad civil 3d": {
+    "canonical": "AutoCAD Civil 3D",
+    "category": "Engineering",
+    "aliases": [
+      "civil 3d"
+    ]
+  },
+  "finite element analysis": {
+    "canonical": "Finite Element Analysis",
+    "category": "Engineering",
+    "aliases": [
+      "fea",
+      "ansys"
+    ]
+  },
+  "contract law": {
+    "canonical": "Contract Law",
+    "category": "Legal",
+    "aliases": [
+      "contract drafting",
+      "contract management"
+    ]
+  },
+  "google classroom": {
+    "canonical": "Google Classroom",
+    "category": "Education",
+    "aliases": []
+  },
+  "import export": {
+    "canonical": "Import/Export",
+    "category": "Logistics",
+    "aliases": [
+      "customs",
+      "trade compliance"
+    ]
+  },
+  "sap mm": {
+    "canonical": "SAP MM",
+    "category": "Logistics",
+    "aliases": [
+      "sap materials management"
+    ]
+  },
+  "construction planning": {
+    "canonical": "Construction Planning",
+    "category": "Construction",
+    "aliases": [
+      "project scheduling",
+      "construction scheduling"
+    ]
+  },
+  "building codes": {
+    "canonical": "Building Codes",
+    "category": "Construction",
+    "aliases": [
+      "building regulations",
+      "construction standards"
+    ]
+  },
+  "primavera": {
+    "canonical": "Primavera",
+    "category": "Construction",
+    "aliases": [
+      "oracle primavera",
+      "p6"
+    ]
+  },
+  "ms project": {
+    "canonical": "MS Project",
+    "category": "Construction",
+    "aliases": [
+      "microsoft project"
+    ]
+  },
+  "sales management": {
+    "canonical": "Sales Management",
+    "category": "Sales",
+    "aliases": [
+      "sales leadership"
+    ]
+  },
+  "b2b sales": {
+    "canonical": "B2B Sales",
+    "category": "Sales",
+    "aliases": [
+      "business to business sales"
+    ]
+  },
+  "b2c sales": {
+    "canonical": "B2C Sales",
+    "category": "Sales",
+    "aliases": [
+      "retail sales",
+      "consumer sales"
+    ]
   }
 }

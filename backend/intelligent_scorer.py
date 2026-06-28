@@ -1,4 +1,4 @@
-"""
+﻿"""
 Intelligent Resume Scoring Engine
 Implements 10 advanced scoring signals beyond simple keyword matching:
 
@@ -24,7 +24,7 @@ CURRENT_YEAR = datetime.now().year
 # Contextual skill extraction moved to contextual_extractor.py
 
 
-# ── 2. Career Progression Scoring ────────────────────────────────────────────
+# â”€â”€ 2. Career Progression Scoring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 SENIORITY_LEVELS = {
     "intern": 0, "trainee": 0, "graduate": 1,
@@ -53,9 +53,9 @@ def score_career_progression(text: str) -> float:
     if not levels:
         return 50.0  # neutral
     if len(levels) == 1:
-        # Single level found — score based on seniority
+        # Single level found â€” score based on seniority
         return min(40 + levels[0] * 10, 100)
-    # Multiple levels — reward upward progression
+    # Multiple levels â€” reward upward progression
     progression = levels[-1] - levels[0]
     max_level   = levels[-1]
     base_score  = min(40 + max_level * 8, 80)
@@ -63,7 +63,7 @@ def score_career_progression(text: str) -> float:
     return min(base_score + prog_bonus, 100)
 
 
-# ── 3. Skill Recency Weighting ────────────────────────────────────────────────
+# â”€â”€ 3. Skill Recency Weighting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def extract_skill_years(text: str, skill: str) -> list[int]:
     """Find years mentioned near a skill to estimate recency."""
@@ -102,13 +102,13 @@ def score_skills_with_recency(
         if years:
             weight = max(recency_weight(y) for y in years)
         else:
-            weight = 0.7  # found but no year context — moderate weight
+            weight = 0.7  # found but no year context â€” moderate weight
         total_weight += weight
     max_possible = len(job_skills)
     return round((total_weight / max_possible) * 100, 2)
 
 
-# ── 4. Implicit Skill Inference ───────────────────────────────────────────────
+# â”€â”€ 4. Implicit Skill Inference â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 IMPLICIT_SKILL_MAP = {
     "REST APIs":          ["HTTP", "JSON", "API Design", "Web Services"],
@@ -140,7 +140,7 @@ def infer_implicit_skills(detected_skills: list[str]) -> list[str]:
     return list(inferred)
 
 
-# ── 5. Resume Quality Scoring ─────────────────────────────────────────────────
+# â”€â”€ 5. Resume Quality Scoring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 QUANTIFIED_PATTERNS = [
     r'\d+%',                           # percentages
@@ -208,7 +208,7 @@ def score_resume_quality(text: str) -> float:
     return max(round(quality, 2), 0)
 
 
-# ── 6. Job Title Relevance ────────────────────────────────────────────────────
+# â”€â”€ 6. Job Title Relevance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def score_job_title_relevance(resume_text: str, job_title: str) -> float:
     """Score how closely previous job titles match the target role."""
@@ -238,10 +238,10 @@ def score_job_title_relevance(resume_text: str, job_title: str) -> float:
     return round(best_match * 100, 2)
 
 
-# ── 7. Industry Experience Matching ──────────────────────────────────────────
+# â”€â”€ 7. Industry Experience Matching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 INDUSTRY_KEYWORDS = {
-    # Technology — only core software/IT terms, NOT financial tools
+    # Technology â€” only core software/IT terms, NOT financial tools
     "technology":   [
         "software engineer", "software developer", "web developer", "programmer",
         "devops", "cloud engineer", "data engineer", "machine learning engineer",
@@ -250,7 +250,7 @@ INDUSTRY_KEYWORDS = {
         "javascript developer", "mobile developer", "cybersecurity analyst",
         "network engineer", "systems administrator", "database administrator",
     ],
-    # Finance — strong finance-specific terms
+    # Finance â€” strong finance-specific terms
     "finance":      [
         "financial analysis", "financial analyst", "financial reporting",
         "accounting", "accountant", "auditing", "auditor", "bookkeeping",
@@ -351,7 +351,7 @@ def score_industry_match(resume_text: str, job_text: str) -> float:
     return 20.0
 
 
-# ── 8. Education Field Relevance ──────────────────────────────────────────────
+# â”€â”€ 8. Education Field Relevance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 FIELD_RELEVANCE = {
     "computer science":     ["technology", "software", "data", "it"],
@@ -372,7 +372,7 @@ def score_education_field(resume_text: str, job_text: str) -> float:
     """Score whether education field is relevant to the job."""
     text_lower    = resume_text.lower()
     job_lower     = job_text.lower()
-    best_score    = 40.0  # default — education field unknown
+    best_score    = 40.0  # default â€” education field unknown
 
     for field, relevant_domains in FIELD_RELEVANCE.items():
         if field in text_lower:
@@ -385,7 +385,7 @@ def score_education_field(resume_text: str, job_text: str) -> float:
     return best_score
 
 
-# ── 9. Certification Credibility ─────────────────────────────────────────────
+# â”€â”€ 9. Certification Credibility â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 # Certifications with known validity periods (years)
 CERT_VALIDITY = {
@@ -446,7 +446,7 @@ def score_certification_credibility(
     return round(total_score / len(required_certs), 2)
 
 
-# ── 10. Red Flags Detection ───────────────────────────────────────────────────
+# â”€â”€ 10. Red Flags Detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def detect_red_flags(text: str) -> dict:
     """
@@ -459,8 +459,8 @@ def detect_red_flags(text: str) -> dict:
     flags    = []
     penalty  = 0
 
-    # Short tenures — look for date ranges less than 6 months apart
-    date_pattern = r'(\d{4})\s*[-–]\s*(\d{4}|\bpresent\b|\bcurrent\b)'
+    # Short tenures â€” look for date ranges less than 6 months apart
+    date_pattern = r'(\d{4})\s*[-â€“]\s*(\d{4}|\bpresent\b|\bcurrent\b)'
     tenures = []
     for match in re.finditer(date_pattern, text.lower()):
         start = int(match.group(1))
@@ -488,7 +488,7 @@ def detect_red_flags(text: str) -> dict:
     # Very long resume (possible padding)
     word_count = len(text.split())
     if word_count > 2000:
-        flags.append("Unusually long resume — possible padding")
+        flags.append("Unusually long resume â€” possible padding")
         penalty += 5
 
     return {
@@ -498,7 +498,7 @@ def detect_red_flags(text: str) -> dict:
     }
 
 
-# ── Final Intelligent Score ───────────────────────────────────────────────────
+# â”€â”€ Final Intelligent Score â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @dataclass
 class IntelligentScoringResult:
@@ -567,7 +567,7 @@ def compute_intelligent_score(
     )
     from experience_extractor import extract_years_of_experience
 
-    # ── Core scores ───────────────────────────────────────────────────────────
+    # â”€â”€ Core scores â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     relevant_text = extract_relevant_sections(resume_text)
 
     # Domain-penalized semantic score
@@ -577,10 +577,10 @@ def compute_intelligent_score(
     job_ind    = detect_industry(job_text)
 
     if resume_ind != job_ind and job_ind != "general" and resume_ind != "general":
-        # Different domains — strong penalty
+        # Different domains â€” strong penalty
         sem_score = round(min(semantic_score, 50.0) * 0.70, 2)
     elif resume_ind != job_ind:
-        # One is general — lighter penalty
+        # One is general â€” lighter penalty
         sem_score = round(semantic_score * 0.80, 2)
     else:
         # Same domain
@@ -591,10 +591,10 @@ def compute_intelligent_score(
     # same as experienced professionals semantically
     exp_years_check = extract_years_of_experience(resume_text)
     if exp_years_check == 0:
-        # No experience — cap semantic at 60%
+        # No experience â€” cap semantic at 60%
         sem_score = round(min(sem_score, 60.0), 2)
     elif exp_years_check < 1:
-        # Less than 1 year — cap at 70%
+        # Less than 1 year â€” cap at 70%
         sem_score = round(min(sem_score, 70.0), 2)
 
     # Advanced skills matching with partial credit
@@ -613,19 +613,19 @@ def compute_intelligent_score(
         "match_ratio":   adv_match["match_score"] / 100,
     }
 
-    # Experience — only meaningful if candidate has relevant skills
+    # Experience â€” only meaningful if candidate has relevant skills
     # If skills score is 0, experience is irrelevant to this job
     raw_exp_score = score_experience_domain_aware(resume_text, job_min_experience, job_text)
     exp_years     = extract_years_of_experience(resume_text)
 
     if base_skills_sc == 0:
-        # No relevant skills at all — experience counts nothing
+        # No relevant skills at all â€” experience counts nothing
         exp_score = 0.0
     elif base_skills_sc < 30:
-        # Very few skills — experience heavily discounted
+        # Very few skills â€” experience heavily discounted
         exp_score = round(raw_exp_score * (base_skills_sc / 100), 2)
     else:
-        # Has relevant skills — experience counts normally
+        # Has relevant skills â€” experience counts normally
         exp_score = raw_exp_score
 
     overqual_info = detect_overqualification(exp_years, job_min_experience)
@@ -640,12 +640,12 @@ def compute_intelligent_score(
         resume_text, resume_skills, job_required_certs
     )
 
-    # ── Advanced scores ───────────────────────────────────────────────────────
+    # â”€â”€ Advanced scores â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-    # 1. Contextual skills — use improved extractor
+    # 1. Contextual skills â€” use improved extractor
     ctx_skills     = extract_contextual_skills_v2(resume_text)
     all_skills     = list(set(resume_skills + ctx_skills))
-    skills_result2 = skills_match_with_synonyms(all_skills, job_required_skills)
+    skills_result2 = skills_match_with_synonyms(all_skills, job_required_skills, resume_text)
     ctx_skills_sc  = round(skills_result2["match_ratio"] * 100, 2)
 
     # Contextual skills boost is limited when experience is very low
@@ -658,13 +658,13 @@ def compute_intelligent_score(
         if ctx_boost > 25:
             ctx_skills_sc = base_skills_sc + 25  # cap contextual boost at 25%
 
-    # 2. Career progression — penalize if no real work experience found
+    # 2. Career progression â€” penalize if no real work experience found
     career_score = score_career_progression(resume_text)
     if exp_years == 0:
-        # Fresh graduate — career progression irrelevant
+        # Fresh graduate â€” career progression irrelevant
         career_score = min(career_score, 20.0)
     elif exp_years < 1:
-        # Less than 1 year — heavily discounted
+        # Less than 1 year â€” heavily discounted
         career_score = min(career_score, 35.0)
 
     # 3. Skill recency
@@ -691,10 +691,10 @@ def compute_intelligent_score(
     red_flag_result = detect_red_flags(resume_text)
     penalty         = red_flag_result["penalty"]
 
-    # ── Context-enhanced skills score ─────────────────────────────────────────
+    # â”€â”€ Context-enhanced skills score â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     final_skills = max(base_skills_sc, ctx_skills_sc)
 
-    # Academic skills discount — if no work experience, skills likely theoretical
+    # Academic skills discount â€” if no work experience, skills likely theoretical
     # A fresh graduate with all required skills on paper still lacks practical experience
     if exp_years == 0 and final_skills > 50:
         # Cap skills at 55% for candidates with zero work experience
@@ -704,7 +704,7 @@ def compute_intelligent_score(
     elif exp_years is not None and exp_years < 2 and final_skills > 70:
         final_skills = min(final_skills, 70.0)
 
-    # ── Domain gate — penalize domain-dependent scores when skills = 0 ────────
+    # â”€â”€ Domain gate â€” penalize domain-dependent scores when skills = 0 â”€â”€â”€â”€â”€â”€â”€â”€
     # Skills gate factor: 0.0 when no skills, 1.0 when full skills match
     skills_gate = final_skills / 100.0
 
@@ -726,7 +726,7 @@ def compute_intelligent_score(
     # Job title relevance gated by skills
     title_score = round(title_score * skills_gate, 2)
 
-    # ── Weighted final score ──────────────────────────────────────────────────
+    # â”€â”€ Weighted final score â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     raw_score = (
         0.25 * sem_score        +   # semantic similarity
         0.20 * final_skills     +   # skills match (context-enhanced)

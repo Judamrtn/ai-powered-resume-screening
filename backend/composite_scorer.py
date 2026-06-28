@@ -1,4 +1,4 @@
-"""
+﻿"""
 Composite Scorer v3
 Fixes:
 1. Education extraction - stricter patterns, no false matches
@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from taxonomy import normalize_skill, skills_match_with_synonyms
 from experience_extractor import extract_years_of_experience, score_experience as base_score_experience
 
-# ── Weights ───────────────────────────────────────────────────────────────────
+# â”€â”€ Weights â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 DEFAULT_WEIGHTS = {
     "semantic":       0.40,
     "skills":         0.30,
@@ -21,7 +21,7 @@ DEFAULT_WEIGHTS = {
     "certifications": 0.05,
 }
 
-# ── Education levels — STRICT patterns only ───────────────────────────────────
+# â”€â”€ Education levels â€” STRICT patterns only â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Key fix: only match these as whole words with word boundaries
 # Avoids "ms" matching "systems", "bs" matching "business", etc.
 EDUCATION_PATTERNS = [
@@ -75,7 +75,7 @@ EDUCATION_RANK_TO_NAME = {
     6: "PhD",
 }
 
-# ── Domain keywords per industry ──────────────────────────────────────────────
+# â”€â”€ Domain keywords per industry â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 DOMAIN_KEYWORDS = {
     "technology":   [
         "software engineer", "software developer", "web developer", "programmer",
@@ -138,7 +138,7 @@ def detect_domain(text: str) -> str:
 
 
 
-# ── Fix 1: Strict education extraction ───────────────────────────────────────
+# â”€â”€ Fix 1: Strict education extraction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def extract_education_level(text: str) -> tuple[str, int]:
     """
@@ -162,7 +162,7 @@ def score_education(resume_text: str, required_education: str | None) -> float:
     if not required_education:
         return 50.0
 
-    # Get required rank — also check common shorthand like "Bachelor's", "Master's"
+    # Get required rank â€” also check common shorthand like "Bachelor's", "Master's"
     req_lower = required_education.lower().strip()
     req_rank  = 0
 
@@ -201,16 +201,16 @@ def score_education(resume_text: str, required_education: str | None) -> float:
     # Granular partial scoring based on gap
     gap = req_rank - found_rank
     if gap == 1:
-        return 65.0   # one level below — e.g. Advanced Diploma vs Bachelor's
+        return 65.0   # one level below â€” e.g. Advanced Diploma vs Bachelor's
     elif gap == 2:
-        return 40.0   # two levels below — e.g. Diploma vs Master's
+        return 40.0   # two levels below â€” e.g. Diploma vs Master's
     elif gap == 3:
         return 20.0   # three levels below
     else:
         return 10.0   # far below requirement
 
 
-# ── Fix 2: Domain-aware experience scoring ───────────────────────────────────
+# â”€â”€ Fix 2: Domain-aware experience scoring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def score_experience_domain_aware(
     resume_text:    str,
@@ -231,14 +231,14 @@ def score_experience_domain_aware(
 
     # Domain mismatch penalty
     if resume_domain != job_domain and job_domain != "general":
-        # Different domain — max score is 30% regardless of years
+        # Different domain â€” max score is 30% regardless of years
         if years_found == 0:
             return 10.0
         if years_found >= required_years:
             return 30.0
         return round((years_found / required_years) * 20, 2)
 
-    # Same domain — normal scoring
+    # Same domain â€” normal scoring
     if years_found == 0:
         return 20.0
     if years_found >= required_years:
@@ -246,14 +246,14 @@ def score_experience_domain_aware(
         bonus  = min(excess * 5, 20)
         score  = min(100.0, 80.0 + bonus)
 
-        # Overqualification soft penalty — very large excess experience
+        # Overqualification soft penalty â€” very large excess experience
         # relative to what the role asks for is a real recruiter concern
         # (flight risk, salary mismatch, role under-utilization), so we
         # taper the score back down rather than letting it climb forever.
         if required_years > 0:
             ratio = years_found / required_years
             if ratio >= 4:
-                # e.g. 8+ years for a job requiring 2 — heavily overqualified
+                # e.g. 8+ years for a job requiring 2 â€” heavily overqualified
                 score = max(score - 15, 60.0)
             elif ratio >= 2.5:
                 # moderately overqualified
@@ -278,12 +278,12 @@ def detect_overqualification(years_found: float, required_years: int | None) -> 
     }
 
 
-# ── Fix 3: Section-aware semantic scoring ────────────────────────────────────
+# â”€â”€ Fix 3: Section-aware semantic scoring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def extract_relevant_sections(text: str) -> str:
     """
     Extract only the most relevant sections for semantic comparison:
-    Skills, Experience, Summary — ignore personal info, hobbies etc.
+    Skills, Experience, Summary â€” ignore personal info, hobbies etc.
     """
     relevant_headers = {
         "skills", "technical skills", "work experience", "experience",
@@ -317,7 +317,7 @@ def extract_relevant_sections(text: str) -> str:
     return extracted if len(extracted) > 200 else text
 
 
-# ── Certifications ────────────────────────────────────────────────────────────
+# â”€â”€ Certifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def score_certifications(
     resume_text:    str,
@@ -343,7 +343,7 @@ def score_certifications(
     return round((len(matched) / len(required_certs)) * 100, 2), matched, missing
 
 
-# ── Result dataclass ──────────────────────────────────────────────────────────
+# â”€â”€ Result dataclass â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @dataclass
 class ScoringResult:
@@ -364,7 +364,7 @@ class ScoringResult:
     weights_used:           dict      = field(default_factory=dict)
 
 
-# ── Main composite scorer ─────────────────────────────────────────────────────
+# â”€â”€ Main composite scorer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def compute_composite_score(
     resume_text:         str,
@@ -384,7 +384,7 @@ def compute_composite_score(
     sem_score     = round(semantic_score, 2)
 
     # Skills with synonym normalization
-    skills_result = skills_match_with_synonyms(resume_skills, job_required_skills)
+    skills_result = skills_match_with_synonyms(resume_skills, job_required_skills, resume_text)
     skills_score  = round(skills_result["match_ratio"] * 100, 2)
 
     # Fix 2: Domain-aware experience scoring

@@ -1,4 +1,4 @@
-# ── Skills Taxonomy & Synonym Map ────────────────────────────────────────────
+﻿# â”€â”€ Skills Taxonomy & Synonym Map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Maps aliases/abbreviations to canonical skill names.
 # Add new entries here as the job market evolves.
 
@@ -240,20 +240,31 @@ def normalize_skills(skills: list[str]) -> list[str]:
     return result
 
 
-def skills_match_with_synonyms(resume_skills: list[str], job_skills: list[str]) -> dict:
-    """
-    Match resume skills against job skills using synonym normalization.
-    Returns matched skills, missing skills, and match ratio.
-    """
+def skills_match_with_synonyms(resume_skills: list[str], job_skills: list[str], resume_text: str = "") -> dict:
+    import re
     normalized_resume = {normalize_skill(s).lower() for s in resume_skills}
     normalized_job    = [(s, normalize_skill(s)) for s in job_skills]
-
-    matched = [orig for orig, norm in normalized_job if norm.lower() in normalized_resume]
-    missing = [orig for orig, norm in normalized_job if norm.lower() not in normalized_resume]
-
+    matched = []
+    missing = []
+    for orig, norm in normalized_job:
+        if norm.lower() in normalized_resume:
+            matched.append(orig)
+        elif resume_text:
+            pattern = r'(?<![A-Za-z0-9])' + re.escape(orig) + r'(?![A-Za-z0-9])'
+            if re.search(pattern, resume_text, re.IGNORECASE):
+                matched.append(orig)
+            else:
+                missing.append(orig)
+        else:
+            missing.append(orig)
     ratio = len(matched) / len(job_skills) if job_skills else 0.0
-
     return {
+        "matched":        matched,
+        "missing":        missing,
+        "match_ratio":    ratio,
+        "matched_count":  len(matched),
+        "total_required": len(job_skills),
+    }
         "matched":       matched,
         "missing":       missing,
         "match_ratio":   ratio,
